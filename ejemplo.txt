@@ -1,0 +1,43 @@
+export SPARK_MASTER_IP='127.0.0.1'
+export SPARK_LOCAL_IP='127.0.0.1'
+
+# Crea contexto de SQL
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+ import sqlContext.implicits._
+ import org.apache.spark.sql._
+
+case class Auction(auctionid: String, 
+ 					bid: Double, 
+ 					bidtime: Double, 
+ 					bidder: String, 
+ 					bidderrate: Integer, 
+ 					openbid: Double, 
+ 					price: Double, 
+ 					item: String, 
+ 					daystolive: Integer)
+
+var auctionRDD= sc.textFile("/home/administradorcito/sparks/xbox.csv").map(_.split(",")).map(p => Auction(p(0),p(1).toDouble,p(2).toDouble,p(3),p(4).toInt,p(5).toDouble,p(6).toDouble,p(7),p(8).toInt ))
+
+var auctionRDD= sc.textFile("/home/administradorcito/sparks/xbox.csv").map(_.split(",")).map(p => Auction(p(0),p(1).toDouble,p(2).toDouble,p(3),p(4).toInt,p(5).toDouble,p(6).toDouble,"xbox",7))
+
+
+
+var apair = auctionRDD.map(auction=>((auction.auctionid,auction.item), (auction.bid, 1)))
+
+var atotalcount = apair.reduceByKey((x,y) => (x._1 + y._1, x._2 + y._2))
+
+
+var textFile = sc.textFile("/home/administradorcito/sparks/xbox.csv")
+var header = textFile.first() #extract header
+textFile = textFile.filter(row => row != header)   #filter out header
+
+textFile.drop(1)
+
+var raw = sc.textFile("/home/administradorcito/sparks/xbox.csv")
+var header = raw.first() 
+raw = raw.filter(row => row != header) 
+var data = raw.map(_.replace(",,",",0,")).map(_.split(",")).map(p => Auction(p(0),p(1).toDouble,p(2).toDouble,p(3),p(4).toInt,p(5).toDouble,p(6).toDouble,"xbox",7))
+var empareja = data.map(auction=>((auction.auctionid,auction.item), (auction.bid, 1)))
+var total = empareja.reduceByKey((x,y) => (x._1 + y._1, x._2 + y._2))
+
+.map(_.replace(",,",",0,"))
